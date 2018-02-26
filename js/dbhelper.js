@@ -13,25 +13,25 @@ class DBHelper {
   }
 
   static get dbVersion() {
-    return 15;
+    return 1;
   }
 
-  static get checkStoreExists() {
-    var bool = false;
-    idb.open('restaurants-db', DBHelper.dbVersion)
-    .then(function (upgradeDB) {
-      bool = upgradeDB.objectStoreNames.contains('keyval');
-      return bool;
-    });
-  }
+  // static get checkStoreExists() {
+  //   var bool = false;
+  //   idb.open('restaurants-db', DBHelper.dbVersion)
+  //   .then(function (upgradeDB) {
+  //     bool = upgradeDB.objectStoreNames.contains('keyval');
+  //     return bool;
+  //   });
+  // }
 
-  static createStore() {
-    idb.open('restaurants-db', DBHelper.dbVersion, function (upgradeDB) {
-      var store = upgradeDB.createObjectStore('keyval', {keyPath: 'id'});
-      store.put([]);
-      console.log('Creating store');
-    });
-  }
+  // static createStore() {
+  //   idb.open('restaurants-db', DBHelper.dbVersion, function (upgradeDB) {
+  //     var store = upgradeDB.createObjectStore('keyval', {keyPath: 'id'});
+  //     store.put([]);
+  //     console.log('Creating store');
+  //   });
+  // }
 
   /**
    * Fetch all restaurants.
@@ -43,66 +43,47 @@ class DBHelper {
     //   console.log(bool);
     // bool = DBHelper.checkStoreExists;
     // console.log(bool);
-    idb.open('products', 2)
-    .then(function (upgradeDB) {
-      bool = upgradeDB.objectStoreNames.contains('beverages');
-      console.log(bool);
-    });
+    // idb.open('restaurants', 1)
+    // .then(function (upgradeDB) {
+    //   bool = upgradeDB.objectStoreNames.contains('keyval');
+    //   console.log(bool);
+    // });
 
     idb.open('restaurants', 1, function(upgradeDB) {
       var store = upgradeDB.createObjectStore('keyval', {
         keyPath: 'id'
       });
-      store.put({id: 123, name: 'coke', price: 10.99, quantity: 200});
-      store.put({id: 321, name: 'pepsi', price: 8.99, quantity: 100});
-      store.put({id: 222, name: 'water', price: 11.99, quantity: 300});
     });
 
-    idb.open('products', 2, function(upgradeDB) {
-      var store = upgradeDB.createObjectStore('beverages', {
-        keyPath: 'id'
+    fetch(DBHelper.DATABASE_URL)
+    .then(function (response) {  
+      const json = response.json();
+      return json;
+    })
+    .then(function (data) {
+      idb.open('restaurants', 1)
+      .then(function (db) {
+        const tx = db.transaction('keyval', 'readwrite');
+        var store = tx.objectStore('keyval');
+        for (let i=0; i<data.length; i++) {
+          store.put(data[i]);
+        }
+        console.log('Creating store');
       });
-      store.put({id: 123, name: 'coke', price: 10.99, quantity: 200});
-      store.put({id: 321, name: 'pepsi', price: 8.99, quantity: 100});
-      store.put({id: 222, name: 'water', price: 11.99, quantity: 300});
-    });
-
-    console.log(bool);
-    if (!bool) {
-      fetch(DBHelper.DATABASE_URL)
-      .then(function (response) {  
-        const json = response.json();
-        return json;
-      })
-      .then(function (data) {
-        idb.open('products', 2)
-        .then(function (db) {
-          console.log('A');
-          const tx = db.transaction('beverages', 'readwrite');
-          var store = tx.objectStore('beverages');
-          for (let i=0; i<data.length; i++) {
-            store.put(data[i]);
-          }
-          // return tx.complete;
-          console.log('Creating store');
-        });
-        callback(null, data);
-      })
-      .catch(function (err) {
-        const error = `Request failed. Returned status of ${err.status}`;
-        console.log('ERROR DB: ' + err);
-        callback(error, null);
-      });
-    } else {
-      idb.open('products', 2, function(db) {
-        var tx = db.transaction('beverages', 'readonly');
-        var store = tx.objectStore('beverages');
+      callback(null, data);
+    })
+    .catch(function (err) {
+      const error = `Request failed. Returned status of ${err.status}`;
+      console.log('ERROR DB: ' + err);
+      
+      idb.open('restaurants', 1, function(db) {
+        var tx = db.transaction('keyval', 'readonly');
+        var store = tx.objectStore('keyval');
         store.getAll().then(function (restaurants) {
           callback(null, restaurants);
         });
       });
-    }
-    
+    });
   }
 
   /**

@@ -63,7 +63,6 @@ self.addEventListener('fetch', function(event) {
           return response;
         }).catch(function (error) {
           console.log(error);
-          console.log('Not found');
         });
       }
     })
