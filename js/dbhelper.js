@@ -16,73 +16,71 @@ class DBHelper {
     return 1;
   }
 
-  // static get checkStoreExists() {
-  //   var bool = false;
-  //   idb.open('restaurants-db', DBHelper.dbVersion)
-  //   .then(function (upgradeDB) {
-  //     bool = upgradeDB.objectStoreNames.contains('keyval');
-  //     return bool;
-  //   });
-  // }
+  static openIDB() {
+    return idb.open('restaurants', 1, function(upgradeDB) {
+      var store = upgradeDB.createObjectStore('keyval', {
+        keyPath: 'id'
+      });
+    });
+  }
 
-  // static createStore() {
-  //   idb.open('restaurants-db', DBHelper.dbVersion, function (upgradeDB) {
-  //     var store = upgradeDB.createObjectStore('keyval', {keyPath: 'id'});
-  //     store.put([]);
-  //     console.log('Creating store');
-  //   });
-  // }
+  static insertDB(data) {
+    return DBHelper.openIDB()
+    .then(function(db) {
+      const tx = db.transaction('keyval', 'readwrite');
+      var store = tx.objectStore('keyval');
+      console.log(data);
+      for (let i=0; i<data.length; i++) {
+        store.put(data[i]);
+      }
+      return tx.complete;
+    });
+  }
+
+  static readDB() {
+    return DBHelper.openIDB()
+    .then(function(db) {
+      const tx = db.transaction('keyval');
+      const store = tx.objectStore('keyval');
+
+      return store.getAll();
+    })
+  }
+
+  static fetchFromServer(bool) {
+    if (bool) {
+      return fetch(DBHelper.DATABASE_URL)
+      .then(function (response) {  
+        const json = response.json();
+        return json;
+      }).then(function(data) {
+        DBHelper.insertDB(data);
+        return data;
+      })
+    }
+  }
 
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    var bool = false;
-    // idb.open('restaurants-db',DBHelper.dbVersion, function(upgradeDB) {
-    //   bool = upgradeDB.objectStoreNames.contains('keyval');
-    //   console.log(bool);
-    // bool = DBHelper.checkStoreExists;
-    // console.log(bool);
-    // idb.open('restaurants', 1)
-    // .then(function (upgradeDB) {
-    //   bool = upgradeDB.objectStoreNames.contains('keyval');
-    //   console.log(bool);
-    // });
 
-    idb.open('restaurants', 1, function(upgradeDB) {
-      var store = upgradeDB.createObjectStore('keyval', {
-        keyPath: 'id'
-      });
-    });
-
-    fetch(DBHelper.DATABASE_URL)
-    .then(function (response) {  
-      const json = response.json();
-      return json;
+    DBHelper.readDB()
+    .then(function(data) {
+      console.log(data);
+      if (data.length == 0) {
+        return DBHelper.fetchFromServer(true);
+      }
+      return Promise.resolve(data);
     })
-    .then(function (data) {
-      idb.open('restaurants', 1)
-      .then(function (db) {
-        const tx = db.transaction('keyval', 'readwrite');
-        var store = tx.objectStore('keyval');
-        for (let i=0; i<data.length; i++) {
-          store.put(data[i]);
-        }
-        console.log('Creating store');
-      });
-      callback(null, data);
+    .then(function(restaurants) {
+      console.log(restaurants);
+      callback(null, restaurants);
     })
     .catch(function (err) {
       const error = `Request failed. Returned status of ${err.status}`;
       console.log('ERROR DB: ' + err);
-      
-      idb.open('restaurants', 1, function(db) {
-        var tx = db.transaction('keyval', 'readonly');
-        var store = tx.objectStore('keyval');
-        store.getAll().then(function (restaurants) {
-          callback(null, restaurants);
-        });
-      });
+      callback(error, null);
     });
   }
 
