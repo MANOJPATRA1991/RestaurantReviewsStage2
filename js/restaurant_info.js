@@ -35,6 +35,7 @@ fetchRestaurantFromURL = (callback) => {
   } else {
     DBHelper.fetchRestaurantById(id, (error, restaurant) => {
       self.restaurant = restaurant;
+      console.log(restaurant);
       if (!restaurant) {
         console.error(error);
         return;

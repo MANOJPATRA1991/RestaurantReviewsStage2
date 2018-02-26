@@ -2,7 +2,7 @@
  * Common database helper functions.
  */
 class DBHelper {
-
+  
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
@@ -12,25 +12,97 @@ class DBHelper {
     return `http://localhost:${port}/restaurants`;
   }
 
+  static get dbVersion() {
+    return 15;
+  }
+
+  static get checkStoreExists() {
+    var bool = false;
+    idb.open('restaurants-db', DBHelper.dbVersion)
+    .then(function (upgradeDB) {
+      bool = upgradeDB.objectStoreNames.contains('keyval');
+      return bool;
+    });
+  }
+
+  static createStore() {
+    idb.open('restaurants-db', DBHelper.dbVersion, function (upgradeDB) {
+      var store = upgradeDB.createObjectStore('keyval', {keyPath: 'id'});
+      store.put([]);
+      console.log('Creating store');
+    });
+  }
+
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', DBHelper.DATABASE_URL);
-    xhr.onload = () => {
-      if (xhr.status === 200) { // Got a success response from server!
-        const json = JSON.parse(xhr.responseText);
-        console.log(json);
-        const restaurants = json;
-        console.log(restaurants);
-        callback(null, restaurants);
-      } else { // Oops!. Got an error from server.
-        const error = (`Request failed. Returned status of ${xhr.status}`);
+    var bool = false;
+    // idb.open('restaurants-db',DBHelper.dbVersion, function(upgradeDB) {
+    //   bool = upgradeDB.objectStoreNames.contains('keyval');
+    //   console.log(bool);
+    // bool = DBHelper.checkStoreExists;
+    // console.log(bool);
+    idb.open('products', 2)
+    .then(function (upgradeDB) {
+      bool = upgradeDB.objectStoreNames.contains('beverages');
+      console.log(bool);
+    });
+
+    idb.open('restaurants', 1, function(upgradeDB) {
+      var store = upgradeDB.createObjectStore('keyval', {
+        keyPath: 'id'
+      });
+      store.put({id: 123, name: 'coke', price: 10.99, quantity: 200});
+      store.put({id: 321, name: 'pepsi', price: 8.99, quantity: 100});
+      store.put({id: 222, name: 'water', price: 11.99, quantity: 300});
+    });
+
+    idb.open('products', 2, function(upgradeDB) {
+      var store = upgradeDB.createObjectStore('beverages', {
+        keyPath: 'id'
+      });
+      store.put({id: 123, name: 'coke', price: 10.99, quantity: 200});
+      store.put({id: 321, name: 'pepsi', price: 8.99, quantity: 100});
+      store.put({id: 222, name: 'water', price: 11.99, quantity: 300});
+    });
+
+    console.log(bool);
+    if (!bool) {
+      fetch(DBHelper.DATABASE_URL)
+      .then(function (response) {  
+        const json = response.json();
+        return json;
+      })
+      .then(function (data) {
+        idb.open('products', 2)
+        .then(function (db) {
+          console.log('A');
+          const tx = db.transaction('beverages', 'readwrite');
+          var store = tx.objectStore('beverages');
+          for (let i=0; i<data.length; i++) {
+            store.put(data[i]);
+          }
+          // return tx.complete;
+          console.log('Creating store');
+        });
+        callback(null, data);
+      })
+      .catch(function (err) {
+        const error = `Request failed. Returned status of ${err.status}`;
+        console.log('ERROR DB: ' + err);
         callback(error, null);
-      }
-    };
-    xhr.send();
+      });
+    } else {
+      idb.open('products', 2, function(db) {
+        var tx = db.transaction('beverages', 'readonly');
+        var store = tx.objectStore('beverages');
+        store.getAll().then(function (restaurants) {
+          callback(null, restaurants);
+        });
+      });
+    }
+    
   }
 
   /**
@@ -43,6 +115,7 @@ class DBHelper {
         callback(error, null);
       } else {
         const restaurant = restaurants.find(r => r.photograph == id);
+        console.log(restaurant);
         if (restaurant) { // Got the restaurant
           callback(null, restaurant);
         } else { // Restaurant does not exist in the database
