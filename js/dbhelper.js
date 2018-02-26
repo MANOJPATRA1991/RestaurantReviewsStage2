@@ -16,6 +16,9 @@ class DBHelper {
     return 1;
   }
 
+  /**
+   * Open IndexedDB
+   */
   static openIDB() {
     return idb.open('restaurants', 1, function(upgradeDB) {
       var store = upgradeDB.createObjectStore('keyval', {
@@ -24,6 +27,10 @@ class DBHelper {
     });
   }
 
+  /**
+   * Insert data into indexedDB
+   * @param {Array} data 
+   */
   static insertDB(data) {
     return DBHelper.openIDB()
     .then(function(db) {
@@ -37,6 +44,9 @@ class DBHelper {
     });
   }
 
+  /**
+   * Read from indexedDB
+   */
   static readDB() {
     return DBHelper.openIDB()
     .then(function(db) {
