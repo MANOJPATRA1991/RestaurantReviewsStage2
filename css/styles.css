@@ -344,3 +344,9 @@ nav h1 a {
     justify-content: flex-start;
   }
 }
+
+@media screen and (max-width: 420px) {
+  #map-container {
+    display: none;
+  }
+}

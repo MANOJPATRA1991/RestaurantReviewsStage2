@@ -99,9 +99,13 @@ updateRestaurants = () => {
 
   let bool = true;
 
-  if (cuisine.value != 'all' || neighborhood.value != 'all') {
+  console.log(cuisine);
+
+  if (cuisine != 'all' || neighborhood != 'all') {
     bool = false;
   }
+
+  console.log(bool);
 
   DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
     if (error) { // Got an error!
