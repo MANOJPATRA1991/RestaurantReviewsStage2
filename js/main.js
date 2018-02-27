@@ -150,7 +150,7 @@ createRestaurantHTML = (restaurant, bool) => {
 
   if(bool === true) {
     image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant));
-    image.src = DBHelper.imageUrlForRestaurant(restaurant);
+    image.src = 'https://media.giphy.com/media/Fs5bkQOcf0weI/source.gif';
   } else {
     image.src = DBHelper.imageUrlForRestaurant(restaurant);
   }
