@@ -7,7 +7,7 @@ var markers = []
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
-document.addEventListener('DOMContentLoaded', (event) => {
+window.addEventListener('load', (event) => {
   fetchNeighborhoods();
   fetchCuisines();
 });
@@ -97,12 +97,18 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
+  let bool = true;
+
+  if (cuisine.value != 'all' || neighborhood.value != 'all') {
+    bool = false;
+  }
+
   DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
     if (error) { // Got an error!
       console.error(error);
     } else {
       resetRestaurants(restaurants);
-      fillRestaurantsHTML();
+      fillRestaurantsHTML(bool);
     }
   })
 }
@@ -125,10 +131,10 @@ resetRestaurants = (restaurants) => {
 /**
  * Create all restaurants HTML and add them to the webpage.
  */
-fillRestaurantsHTML = (restaurants = self.restaurants) => {
+fillRestaurantsHTML = (bool, restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
   restaurants.forEach(restaurant => {
-    ul.append(createRestaurantHTML(restaurant));
+    ul.append(createRestaurantHTML(restaurant, bool));
   });
   addMarkersToMap();
 }
@@ -136,12 +142,18 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
 /**
  * Create restaurant HTML.
  */
-createRestaurantHTML = (restaurant) => {
+createRestaurantHTML = (restaurant, bool) => {
   const li = document.createElement('li');
 
   const image = document.createElement('img');
   image.className = 'restaurant-img';
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+
+  if(bool === true) {
+    image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant));
+    image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  } else {
+    image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  }
   image.alt = `${restaurant.name} Restaurant`;
   li.append(image);
 

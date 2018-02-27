@@ -60,7 +60,8 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
 
   const image = document.getElementById('restaurant-img');
   image.className = 'restaurant-img';
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant));
+  image.src="https://media.giphy.com/media/Fs5bkQOcf0weI/source.gif";
   image.setAttribute("tabindex", "0");
   image.alt = `${restaurant.name} Restaurant`;
 
@@ -105,7 +106,7 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const div = container.getElementsByTagName('div')[1];
   const title = document.createElement('h3');
   title.innerHTML = 'Reviews';
-
+  title.setAttribute("tabindex", "0");
   div.appendChild(title);
 
 

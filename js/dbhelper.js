@@ -103,7 +103,7 @@ class DBHelper {
       if (error) {
         callback(error, null);
       } else {
-        const restaurant = restaurants.find(r => r.photograph == id);
+        const restaurant = restaurants.find(r => r.id == id);
         console.log(restaurant);
         if (restaurant) { // Got the restaurant
           callback(null, restaurant);
@@ -214,7 +214,7 @@ class DBHelper {
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
-    return (`/img/${restaurant.photograph}.jpg`);
+    return (`/img/${restaurant.photograph}.webp`);
   }
 
   /**
